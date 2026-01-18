@@ -47,3 +47,25 @@ TEST(CLI, parse_version) {
 
   EXPECT_TRUE(shrt.version);
 }
+
+TEST(CLI, parse_fuse) {
+  Cli cli{
+      "git-each",
+      "--",
+      "--version",
+
+  };
+
+  EXPECT_FALSE(cli.version);
+}
+
+TEST(CLI, parse_dir) {
+  Cli cli{
+      "git-each",
+      "-d",
+      "./src",
+
+  };
+
+  EXPECT_EQ(cli.dir, "./src");
+}
