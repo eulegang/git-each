@@ -30,6 +30,8 @@ struct Processor {
         cli->version = true;
       } else if (str == "--directory" || str == "-d") {
         state = ProcState::Dir;
+      } else if (str == "--system" || str == "-s") {
+        cli->system = true;
       } else if (str == "--") {
         state = ProcState::Fused;
       } else {
@@ -49,7 +51,7 @@ struct Processor {
 };
 
 Cli::Cli(int argc, char *argv[])
-    : args{}, help{}, version{}, dir{std::nullopt} {
+    : args{}, help{}, version{}, system{}, dir{std::nullopt} {
   Processor proc(this);
 
   for (int i = 0; i < argc; i++) {
@@ -58,7 +60,7 @@ Cli::Cli(int argc, char *argv[])
 }
 
 Cli::Cli(std::initializer_list<std::string_view> args)
-    : args{}, help{}, version{}, dir{std::nullopt} {
+    : args{}, help{}, version{}, system{}, dir{std::nullopt} {
   Processor proc(this);
 
   for (const auto &arg : args) {

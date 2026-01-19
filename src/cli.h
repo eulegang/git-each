@@ -11,6 +11,7 @@ struct Cli {
   std::vector<std::string_view> args;
   bool help;
   bool version;
+  bool system;
   std::optional<std::filesystem::path> dir;
 
   Cli(int argc, char *argv[]);

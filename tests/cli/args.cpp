@@ -69,3 +69,28 @@ TEST(CLI, parse_dir) {
 
   EXPECT_EQ(cli.dir, "./src");
 }
+
+TEST(CLI, parse_system) {
+  Cli cli{
+      "git-each",
+      "--system",
+  };
+
+  EXPECT_TRUE(cli.system);
+  Cli shrt{
+      "git-each",
+      "-s",
+  };
+
+  EXPECT_TRUE(shrt.system);
+}
+
+TEST(CLI, empty_flags) {
+  Cli cli{
+      "git-each",
+  };
+
+  EXPECT_FALSE(cli.help);
+  EXPECT_FALSE(cli.version);
+  EXPECT_FALSE(cli.system);
+}
