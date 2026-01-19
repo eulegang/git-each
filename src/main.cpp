@@ -5,6 +5,8 @@
 #include "cli.h"
 #include "discover.h"
 
+void report(std::filesystem::path path);
+
 int main(int argc, char *argv[]) {
   Cli cli(argc, argv);
 
@@ -22,6 +24,13 @@ int main(int argc, char *argv[]) {
   std::filesystem::path start_path =
       cli.dir ? *cli.dir : std::filesystem::current_path();
 
-  discover(start_path,
-           [](auto path) { std::cout << path.string() << std::endl; });
+  if (cli.discover) {
+    discover(start_path,
+             [](auto path) { std::cout << path.string() << std::endl; });
+    return 0;
+  }
+}
+
+void report(std::filesystem::path path) {
+  std::cout << path.string() << std::endl;
 }
