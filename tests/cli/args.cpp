@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 TEST(CLI, parse_skip_binname) {
@@ -98,6 +99,32 @@ TEST(CLI, parse_discover) {
   };
 
   EXPECT_TRUE(shrt.discover);
+}
+
+TEST(CLI, parse_jobs_undef) {
+  Cli cli{
+      "git-each",
+  };
+
+  EXPECT_EQ(cli.jobs, 1);
+}
+
+TEST(CLI, parse_jobs_nonumber_end) {
+  Cli cli{"git-each", "-j"};
+
+  EXPECT_EQ(cli.jobs, std::thread::hardware_concurrency());
+}
+
+TEST(CLI, parse_jobs_nonumber) {
+  Cli cli{"git-each", "-j", "-s"};
+
+  EXPECT_EQ(cli.jobs, std::thread::hardware_concurrency());
+}
+
+TEST(CLI, parse_jobs_specified) {
+  Cli cli{"git-each", "-j", "4"};
+
+  EXPECT_EQ(cli.jobs, 4);
 }
 
 TEST(CLI, empty_flags) {

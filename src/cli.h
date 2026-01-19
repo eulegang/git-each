@@ -13,6 +13,7 @@ struct Cli {
   bool version;
   bool system;
   bool discover;
+  int jobs;
   std::optional<std::filesystem::path> dir;
 
   Cli(int argc, char *argv[]);

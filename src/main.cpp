@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
   FanOut<path_t> to_workers;
 
   std::vector<std::thread> threads;
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < cli.jobs; i++) {
     threads.push_back(std::thread(worker, to_workers.recv()));
   }
 
