@@ -23,5 +23,5 @@ int main(int argc, char *argv[]) {
       cli.dir ? *cli.dir : std::filesystem::current_path();
 
   discover(start_path,
-           [](auto path) { std::cout << "repo found " << path << std::endl; });
+           [](auto path) { std::cout << path.string() << std::endl; });
 }
