@@ -12,6 +12,7 @@ struct Cli {
   bool help;
   bool version;
   bool system;
+  bool discover;
   std::optional<std::filesystem::path> dir;
 
   Cli(int argc, char *argv[]);

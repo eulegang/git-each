@@ -85,6 +85,21 @@ TEST(CLI, parse_system) {
   EXPECT_TRUE(shrt.system);
 }
 
+TEST(CLI, parse_discover) {
+  Cli cli{
+      "git-each",
+      "--discover",
+  };
+
+  EXPECT_TRUE(cli.discover);
+  Cli shrt{
+      "git-each",
+      "-D",
+  };
+
+  EXPECT_TRUE(shrt.discover);
+}
+
 TEST(CLI, empty_flags) {
   Cli cli{
       "git-each",
@@ -93,4 +108,5 @@ TEST(CLI, empty_flags) {
   EXPECT_FALSE(cli.help);
   EXPECT_FALSE(cli.version);
   EXPECT_FALSE(cli.system);
+  EXPECT_FALSE(cli.discover);
 }
