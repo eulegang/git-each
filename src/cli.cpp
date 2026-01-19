@@ -70,6 +70,15 @@ Cli::Cli(std::initializer_list<std::string_view> args)
   }
 }
 
+bool Cli::validate() const {
+  if (args.empty() && !discover) {
+    std::cerr << "no command was given" << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
 std::ostream &operator<<(std::ostream &os, const Cli &cli) {
   os << "CLi {" << std::endl;
   os << "  args = <";

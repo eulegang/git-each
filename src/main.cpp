@@ -1,5 +1,9 @@
-#include "cli.h"
+
+#include <filesystem>
 #include <iostream>
+
+#include "cli.h"
+#include "discover.h"
 
 int main(int argc, char *argv[]) {
   Cli cli(argc, argv);
@@ -11,10 +15,13 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  if (cli.args.empty()) {
-    std::cerr << "no command was given" << std::endl;
+  if (!cli.validate()) {
     return 1;
   }
 
-  std::cout << cli << std::endl;
+  std::filesystem::path start_path =
+      cli.dir ? *cli.dir : std::filesystem::current_path();
+
+  discover(start_path,
+           [](auto path) { std::cout << "repo found " << path << std::endl; });
 }

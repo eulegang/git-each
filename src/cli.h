@@ -17,6 +17,8 @@ struct Cli {
 
   Cli(int argc, char *argv[]);
   Cli(std::initializer_list<std::string_view>);
+
+  bool validate() const;
 };
 
 std::ostream &operator<<(std::ostream &os, const Cli &cli);
