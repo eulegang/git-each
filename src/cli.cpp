@@ -1,89 +1,69 @@
 #include "cli.h"
-#include <filesystem>
 #include <initializer_list>
 #include <iostream>
 #include <ostream>
 #include <string_view>
 
 enum class ProcState {
+  First,
   Blank,
   Dir,
   Fused,
 };
 
 struct Processor {
-  std::vector<std::string_view> args;
-  bool help;
-  bool version;
-  std::filesystem::path dir;
+  Cli *cli;
 
-  bool first;
   ProcState state;
 
-  Processor() {
-    first = true;
-    help = false;
-    version = false;
-    state = ProcState::Blank;
-  }
+  Processor(Cli *cli) : cli{cli} { state = ProcState::First; }
 
   void accept(std::string_view str) {
-    if (first) {
-      first = false;
-      return;
-    }
-
     switch (state) {
+    case ProcState::First:
+      state = ProcState::Blank;
+      break;
     case ProcState::Blank:
       if (str == "--help" || str == "-h") {
-        help = true;
+        cli->help = true;
       } else if (str == "--version" || str == "-V") {
-        version = true;
+        cli->version = true;
       } else if (str == "--directory" || str == "-d") {
         state = ProcState::Dir;
       } else if (str == "--") {
         state = ProcState::Fused;
       } else {
-        args.push_back(str);
+        cli->args.push_back(str);
       }
       break;
     case ProcState::Dir:
-      dir = str;
+      cli->dir = str;
 
       state = ProcState::Blank;
       break;
     case ProcState::Fused:
-      args.push_back(str);
+      cli->args.push_back(str);
       break;
     }
   }
-
-  void finalize(Cli *cli) {
-    cli->args = std::move(args);
-    cli->help = help;
-    cli->version = version;
-    cli->dir = dir;
-  }
 };
 
-Cli::Cli(int argc, char *argv[]) {
-  Processor proc;
+Cli::Cli(int argc, char *argv[])
+    : args{}, help{}, version{}, dir{std::nullopt} {
+  Processor proc(this);
 
   for (int i = 0; i < argc; i++) {
     proc.accept(argv[i]);
   }
-
-  proc.finalize(this);
 }
 
-Cli::Cli(std::initializer_list<std::string_view> args) {
-  Processor proc;
+Cli::Cli(std::initializer_list<std::string_view> args)
+    : args{}, help{}, version{}, dir{std::nullopt} {
+  Processor proc(this);
 
   for (const auto &arg : args) {
     proc.accept(arg);
   }
-
-  proc.finalize(this);
 }
 
 std::ostream &operator<<(std::ostream &os, const Cli &cli) {

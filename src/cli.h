@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <initializer_list>
+#include <optional>
 #include <string_view>
 #include <vector>
 
@@ -10,7 +11,7 @@ struct Cli {
   std::vector<std::string_view> args;
   bool help;
   bool version;
-  std::filesystem::path dir;
+  std::optional<std::filesystem::path> dir;
 
   Cli(int argc, char *argv[]);
   Cli(std::initializer_list<std::string_view>);
