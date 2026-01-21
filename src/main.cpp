@@ -5,11 +5,10 @@
 #include "cli.h"
 #include "comms.h"
 #include "discover.h"
+#include "tempfile.h"
+#include "worker.h"
 
 using path_t = std::filesystem::path;
-
-std::thread spawn_worker(FanOut<path_t>::Recv recv);
-void worker(FanOut<path_t>::Recv recv);
 
 int main(int argc, char *argv[]) {
   Cli cli(argc, argv);
@@ -33,11 +32,24 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
+  std::vector<std::string_view> args;
+  if (!cli.system) {
+    args.push_back("git");
+    for (const auto &arg : cli.args) {
+      args.push_back(arg);
+    }
+  } else {
+    args = std::move(cli.args);
+  }
+
   FanOut<path_t> to_workers;
+  TempBase tmp_base("git-each");
+
+  Cmd cmd(args, &tmp_base);
 
   std::vector<std::thread> threads;
   for (int i = 0; i < cli.jobs; i++) {
-    threads.push_back(std::thread(worker, to_workers.recv()));
+    threads.push_back(std::thread(worker, to_workers.recv(), &cmd));
   }
 
   discover(start_path, [&to_workers](auto path) { to_workers.push(path); });
@@ -45,14 +57,5 @@ int main(int argc, char *argv[]) {
 
   for (auto &th : threads) {
     th.join();
-  }
-}
-
-void worker(FanOut<path_t>::Recv recv) {
-  std::optional<path_t> input;
-  while ((input = recv.recv())) {
-    path_t cur = *input;
-
-    std::cout << "worker: " << cur.string() << std::endl;
   }
 }

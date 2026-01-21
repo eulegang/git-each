@@ -6,7 +6,6 @@
  * one goal of this project is zero deps
  */
 
-#include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <optional>
