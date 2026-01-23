@@ -9,8 +9,8 @@
 
 struct CmdOutput {
   int status;
-  TempFile out;
-  TempFile err;
+  std::unique_ptr<TempFile> out;
+  std::unique_ptr<TempFile> err;
 };
 
 class Cmd {

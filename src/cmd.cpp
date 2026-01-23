@@ -1,6 +1,8 @@
 
 #include "cmd.h"
 
+#include <format>
+#include <memory>
 #include <string.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -43,8 +45,8 @@ Cmd::Cmd(std::vector<std::string_view> args, TempBase *base)
 CmdOutput Cmd::run(std::filesystem::path dir) {
   TempInst inst = tmp_base->inst();
 
-  TempFile out = inst.tmp("stdout");
-  TempFile err = inst.tmp("stderr");
+  auto out = inst.tmp("stdout");
+  auto err = inst.tmp("stderr");
   int status;
 
   pid_t pid = fork();
@@ -54,8 +56,8 @@ CmdOutput Cmd::run(std::filesystem::path dir) {
   }
 
   if (pid == 0) {
-    out.dup(1);
-    err.dup(2);
+    out->dup(1);
+    err->dup(2);
     int res = chdir(dir.c_str());
     if (res == -1) {
       throw "failed to chdir into directory";
@@ -65,7 +67,8 @@ CmdOutput Cmd::run(std::filesystem::path dir) {
     res = execv(this->args[0].data(), args.offsets);
 
     if (res == -1) {
-      throw "failed to exec new process";
+      int e = errno;
+      throw std::format("failed to exec new process: {}", e);
     }
   } else {
     pid_t res = waitpid(pid, &status, 0);
@@ -77,7 +80,7 @@ CmdOutput Cmd::run(std::filesystem::path dir) {
 
   return CmdOutput{
       .status = status,
-      .out = out,
-      .err = err,
+      .out = std::move(out),
+      .err = std::move(err),
   };
 }

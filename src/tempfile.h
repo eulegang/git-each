@@ -14,6 +14,7 @@ public:
   ~TempFile();
 
   void dup(int fd) const;
+  void dump(int fd) const;
   const std::filesystem::path &path() const;
   int fd() const;
 };
@@ -25,7 +26,7 @@ class TempInst final {
 public:
   TempInst(std::shared_ptr<std::filesystem::path> path, std::uint64_t id);
 
-  TempFile tmp(std::string_view);
+  std::unique_ptr<TempFile> tmp(std::string_view);
 };
 
 class TempBase final {
