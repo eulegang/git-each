@@ -10,7 +10,7 @@ void worker(FanOut<std::filesystem::path>::Recv recv, Cmd *cmd,
   while ((input = recv.recv())) {
     std::filesystem::path cur = *input;
 
-    std::shared_ptr<CmdOutput> out = cmd->run(cur);
+    std::shared_ptr<CmdOutput> out = cmd->run(std::move(cur));
     report.push(out);
   }
 
@@ -24,7 +24,7 @@ void report(FanIn<std::shared_ptr<CmdOutput>> &in) {
   while ((cmd = in.recv())) {
     std::shared_ptr<CmdOutput> output = *cmd;
 
-    // std::cout << "worker: " << cur.string() << std::endl;
+    std::cout << "worker: " << output->cwd.string() << std::endl;
     std::cout << "status: " << output->status << std::endl;
     std::cout << "begin-stdout" << std::endl;
     output->out->dump(1);

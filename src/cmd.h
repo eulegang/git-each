@@ -9,12 +9,13 @@
 
 struct CmdOutput {
   int status;
+  std::filesystem::path cwd;
   std::unique_ptr<TempFile> out;
   std::unique_ptr<TempFile> err;
 
-  CmdOutput(int status, std::unique_ptr<TempFile> out,
-            std::unique_ptr<TempFile> err)
-      : status{status}, out{std::move(out)}, err{std::move(err)} {}
+  CmdOutput(int status, std::filesystem::path cwd,
+            std::unique_ptr<TempFile> out, std::unique_ptr<TempFile> err)
+      : status{status}, cwd{cwd}, out{std::move(out)}, err{std::move(err)} {}
 };
 
 class Cmd {

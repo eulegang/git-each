@@ -153,5 +153,6 @@ std::shared_ptr<CmdOutput> Cmd::run(std::filesystem::path dir) {
     }
   }
 
-  return std::make_shared<CmdOutput>(status, std::move(out), std::move(err));
+  return std::make_shared<CmdOutput>(status, dir, std::move(out),
+                                     std::move(err));
 }
