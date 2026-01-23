@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
   std::vector<std::string_view> args;
   if (!cli.system) {
-    args.push_back("/usr/bin/git");
+    args.push_back("git");
     for (const auto &arg : cli.args) {
       args.push_back(arg);
     }

@@ -16,6 +16,14 @@ struct CmdOutput {
 class Cmd {
   TempBase *tmp_base;
   std::vector<std::string_view> args;
+  std::string resolved;
+
+  struct Args {
+    char *buffer;
+    char **offsets;
+    Args(std::vector<std::string_view> args);
+    ~Args();
+  };
 
 public:
   Cmd(std::vector<std::string_view> args, TempBase *base);
