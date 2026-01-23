@@ -6,7 +6,6 @@
 
 void worker(FanOut<std::filesystem::path>::Recv recv, Cmd *cmd,
             FanIn<std::shared_ptr<CmdOutput>>::Sender report) {
-  std::cout << "starting worker" << std::endl;
   std::optional<std::filesystem::path> input;
   while ((input = recv.recv())) {
     std::filesystem::path cur = *input;
@@ -14,8 +13,6 @@ void worker(FanOut<std::filesystem::path>::Recv recv, Cmd *cmd,
     std::shared_ptr<CmdOutput> out = cmd->run(cur);
     report.push(out);
   }
-
-  std::cout << "closing worker" << std::endl;
 
   report.close();
 }
