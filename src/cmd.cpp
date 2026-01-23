@@ -117,7 +117,7 @@ Cmd::Cmd(std::vector<std::string_view> args, TempBase *base)
   resolved = resolve(args[0]);
 }
 
-CmdOutput Cmd::run(std::filesystem::path dir) {
+std::shared_ptr<CmdOutput> Cmd::run(std::filesystem::path dir) {
   TempInst inst = tmp_base->inst();
 
   auto out = inst.tmp("stdout");
@@ -153,9 +153,5 @@ CmdOutput Cmd::run(std::filesystem::path dir) {
     }
   }
 
-  return CmdOutput{
-      .status = status,
-      .out = std::move(out),
-      .err = std::move(err),
-  };
+  return std::make_shared<CmdOutput>(status, std::move(out), std::move(err));
 }

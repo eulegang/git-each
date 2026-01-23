@@ -59,4 +59,54 @@ public:
   Recv recv() { return Recv(this); }
 };
 
+template <typename T> class FanIn {
+  std::queue<T> buf;
+  std::mutex mtx;
+  std::condition_variable cv;
+  uint64_t count;
+
+public:
+  class Sender {
+    FanIn<T> *in;
+    Sender(FanIn<T> *in) : in{in} {}
+    friend FanIn<T>::Sender FanIn<T>::sender();
+
+  public:
+    void push(T t) {
+      std::unique_lock<std::mutex> lck(in->mtx);
+      in->buf.push(t);
+      in->cv.notify_one();
+    }
+
+    void close() {
+      std::unique_lock<std::mutex> lck(in->mtx);
+      in->count--;
+      in->cv.notify_all();
+    }
+  };
+
+  FanIn() : buf{}, mtx{}, cv{}, count{0} {}
+  Sender sender() {
+    std::unique_lock<std::mutex> lck(mtx);
+    count++;
+
+    return Sender(this);
+  }
+
+  std::optional<T> recv() {
+    std::unique_lock<std::mutex> lck(mtx);
+
+    while (buf.empty() && count != 0)
+      cv.wait(lck);
+
+    if (!buf.empty()) {
+      T t = buf.front();
+      buf.pop();
+      return t;
+    }
+
+    return std::nullopt;
+  }
+};
+
 #endif

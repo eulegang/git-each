@@ -11,6 +11,10 @@ struct CmdOutput {
   int status;
   std::unique_ptr<TempFile> out;
   std::unique_ptr<TempFile> err;
+
+  CmdOutput(int status, std::unique_ptr<TempFile> out,
+            std::unique_ptr<TempFile> err)
+      : status{status}, out{std::move(out)}, err{std::move(err)} {}
 };
 
 class Cmd {
@@ -27,7 +31,7 @@ class Cmd {
 
 public:
   Cmd(std::vector<std::string_view> args, TempBase *base);
-  CmdOutput run(std::filesystem::path dir);
+  std::shared_ptr<CmdOutput> run(std::filesystem::path dir);
 };
 
 #endif

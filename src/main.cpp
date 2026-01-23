@@ -43,17 +43,21 @@ int main(int argc, char *argv[]) {
   }
 
   FanOut<path_t> to_workers;
+  FanIn<std::shared_ptr<CmdOutput>> to_report;
   TempBase tmp_base("git-each");
 
   Cmd cmd(args, &tmp_base);
 
   std::vector<std::thread> threads;
   for (int i = 0; i < cli.jobs; i++) {
-    threads.push_back(std::thread(worker, to_workers.recv(), &cmd));
+    threads.push_back(
+        std::thread(worker, to_workers.recv(), &cmd, to_report.sender()));
   }
 
   discover(start_path, [&to_workers](auto path) { to_workers.push(path); });
   to_workers.close();
+
+  report(to_report);
 
   for (auto &th : threads) {
     th.join();
