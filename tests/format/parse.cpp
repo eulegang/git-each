@@ -76,9 +76,10 @@ TEST(Formatter, parse_stdout_check) {
 }
 
 TEST(Formatter, parse_stderr_check) {
-  Formatter formatter("%E");
-  std::vector<std::string_view> strtab{};
-  std::vector<Op> bytecode{Op::check_stream(1)};
+  Formatter formatter("%S(Success)");
+  std::vector<std::string_view> strtab{"Success"};
+  std::vector<Op> bytecode{Op::check_success(), Op::begin(), Op::strtab(0),
+                           Op::end()};
 
   EXPECT_EQ(formatter.strtab, strtab);
   EXPECT_EQ(formatter.bytecode, bytecode);
@@ -86,4 +87,12 @@ TEST(Formatter, parse_stderr_check) {
 
 TEST(Formatter, parse_invalid_code) {
   EXPECT_ANY_THROW({ Formatter formatter("%Z"); });
+}
+
+TEST(Formatter, parse_unbalanced) {
+  EXPECT_ANY_THROW({ Formatter formatter("%s("); });
+}
+
+TEST(Formatter, parse_underflow_group) {
+  EXPECT_ANY_THROW({ Formatter formatter("%s)("); });
 }

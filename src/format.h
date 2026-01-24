@@ -13,6 +13,8 @@ struct Op {
     CheckSuccess,
     CheckFailure,
     CheckStream,
+    GroupBegin,
+    GroupEnd,
   } code;
 
   size_t arg;
@@ -26,8 +28,11 @@ struct Op {
   static Op check_stream(size_t index) {
     return Op{.code = CheckStream, .arg = index};
   }
+  static Op begin() { return Op{.code = GroupBegin, .arg = 0}; }
+  static Op end() { return Op{.code = GroupEnd, .arg = 0}; }
 };
 
+std::ostream &operator<<(std::ostream &, const Op &);
 bool operator==(const Op a, const Op b);
 
 struct Formatter {
