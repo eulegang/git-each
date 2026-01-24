@@ -22,6 +22,4 @@ struct Cli {
   bool validate() const;
 };
 
-std::ostream &operator<<(std::ostream &os, const Cli &cli);
-
 #endif

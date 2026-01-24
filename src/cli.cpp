@@ -114,18 +114,3 @@ bool Cli::validate() const {
 
   return true;
 }
-
-std::ostream &operator<<(std::ostream &os, const Cli &cli) {
-  os << "CLi {" << std::endl;
-  os << "  args = <";
-  for (const auto &arg : cli.args) {
-    os << "\"" << arg << "\" ";
-  }
-  os << ">" << std::endl;
-
-  os << "  help = " << cli.help << std::endl;
-  os << "  version = " << cli.version << std::endl;
-  os << "}" << std::endl;
-
-  return os;
-}
