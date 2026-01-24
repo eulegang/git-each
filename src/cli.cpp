@@ -7,12 +7,15 @@
 
 #include "cli.h"
 
+static const std::string_view DEFAULT_FORMAT = "%c%(%s%)\n%O%o%E%e";
+
 enum class ProcState {
   First,
   Blank,
   Dir,
   Jobs,
   Fused,
+  Format,
 };
 
 struct Processor {
@@ -27,6 +30,7 @@ struct Processor {
     case ProcState::First:
       state = ProcState::Blank;
       break;
+
     case ProcState::Blank:
       if (str == "--help" || str == "-h") {
         cli->help = true;
@@ -40,19 +44,26 @@ struct Processor {
         cli->discover = true;
       } else if (str == "--jobs" || str == "-j") {
         state = ProcState::Jobs;
+      } else if (str == "--format" || str == "-f") {
+        state = ProcState::Format;
       } else if (str == "--") {
         state = ProcState::Fused;
       } else {
         cli->args.push_back(str);
       }
       break;
+
     case ProcState::Dir:
       cli->dir = str;
-
       state = ProcState::Blank;
       break;
+
     case ProcState::Fused:
       cli->args.push_back(str);
+      break;
+
+    case ProcState::Format:
+      cli->format = str;
       break;
 
     case ProcState::Jobs:
@@ -66,6 +77,7 @@ struct Processor {
         cli->jobs = std::thread::hardware_concurrency();
       }
       state = ProcState::Blank;
+      break;
     }
   }
 
@@ -91,7 +103,7 @@ Cli::Cli(int argc, char *argv[])
 
 Cli::Cli(std::initializer_list<std::string_view> args)
     : args{}, help{}, version{}, system{}, discover{}, jobs{1},
-      dir{std::nullopt} {
+      format{DEFAULT_FORMAT}, dir{std::nullopt} {
   Processor proc(this);
 
   for (const auto &arg : args) {

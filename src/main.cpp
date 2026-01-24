@@ -5,6 +5,7 @@
 #include "cli.h"
 #include "comms.h"
 #include "discover.h"
+#include "format.h"
 #include "tempfile.h"
 #include "worker.h"
 
@@ -32,6 +33,8 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
+  Formatter formatter{cli.format};
+
   std::vector<std::string_view> args;
   if (!cli.system) {
     args.push_back("git");
@@ -57,7 +60,7 @@ int main(int argc, char *argv[]) {
   discover(start_path, [&to_workers](auto path) { to_workers.push(path); });
   to_workers.close();
 
-  report(to_report);
+  report(to_report, formatter);
 
   for (auto &th : threads) {
     th.join();

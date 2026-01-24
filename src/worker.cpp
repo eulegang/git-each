@@ -17,12 +17,14 @@ void worker(FanOut<std::filesystem::path>::Recv recv, Cmd *cmd,
   report.close();
 }
 
-void report(FanIn<std::shared_ptr<CmdOutput>> &in) {
+void report(FanIn<std::shared_ptr<CmdOutput>> &in, Formatter &formatter) {
 
   std::optional<std::shared_ptr<CmdOutput>> cmd;
 
   while ((cmd = in.recv())) {
     std::shared_ptr<CmdOutput> output = *cmd;
+
+    formatter.format(*output);
 
     std::cout << "worker: " << output->cwd.string() << std::endl;
     std::cout << "status: " << output->status << std::endl;

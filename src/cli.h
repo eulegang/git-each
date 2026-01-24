@@ -14,6 +14,7 @@ struct Cli {
   bool system;
   bool discover;
   int jobs;
+  std::string_view format;
   std::optional<std::filesystem::path> dir;
 
   Cli(int argc, char *argv[]);
