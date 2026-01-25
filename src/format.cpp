@@ -1,9 +1,42 @@
 #include "format.h"
 #include "cmd.h"
+#include <array>
+#include <cstring>
+#include <iostream>
 
 bool operator==(const Op a, const Op b) {
   return a.code == b.code && a.arg == b.arg;
 }
+
+class Output {
+  const size_t CAP = 4096;
+  char *buf;
+  size_t idx;
+  int fd;
+
+public:
+  Output(int fd) : idx{0}, fd{fd} { buf = new char[CAP]; }
+  ~Output() { delete[] buf; }
+
+  void push(std::string_view str) {
+    if (str.size() + idx > CAP) {
+      flush();
+
+      if (str.size() > CAP) {
+        write(fd, str.data(), str.size());
+        return;
+      }
+    }
+
+    memcpy(buf + idx, str.data(), str.size());
+    idx += str.size();
+  }
+
+  void flush() {
+    write(fd, buf, idx);
+    idx = 0;
+  }
+};
 
 std::ostream &operator<<(std::ostream &os, const Op &op) {
   switch (op.code) {
@@ -95,6 +128,7 @@ Formatter::Formatter(std::string_view fmt) : strtab{}, bytecode{} {
     char ch = fmt[i];
 
     if (interp) {
+      size_t index;
       switch (ch) {
       case 's':
         bytecode.push_back(Op::status());
@@ -126,6 +160,18 @@ Formatter::Formatter(std::string_view fmt) : strtab{}, bytecode{} {
 
       case 'E':
         bytecode.push_back(Op::check_stream(1));
+        break;
+
+      case '(':
+        index = strtab.size();
+        strtab.push_back("(");
+        bytecode.push_back(Op::strtab(index));
+        break;
+
+      case ')':
+        index = strtab.size();
+        strtab.push_back(")");
+        bytecode.push_back(Op::strtab(index));
         break;
 
       default:
@@ -160,4 +206,74 @@ Formatter::Formatter(std::string_view fmt) : strtab{}, bytecode{} {
   validate(this);
 }
 
-void Formatter::format(CmdOutput &output) { (void)output; }
+void Formatter::format(CmdOutput &output, int fd) {
+  Output out(fd);
+
+  std::array<TempFile *, 2> streams{output.out.get(), output.err.get()};
+
+  bool ignore = false;
+  size_t context{};
+
+  for (size_t i{}; i < bytecode.size(); i++) {
+    const Op &op = bytecode[i];
+
+    if (ignore) {
+      switch (op.code) {
+      case Op::GroupBegin:
+        context++;
+        break;
+      case Op::GroupEnd:
+        context--;
+        break;
+      default:
+        if (context == 0) {
+          ignore = false;
+        }
+        continue;
+      }
+
+      if (context == 0) {
+        ignore = false;
+      }
+
+      if (ignore)
+        continue;
+    }
+
+    switch (op.code) {
+    case Op::StrTab:
+      out.push(strtab[op.arg]);
+      break;
+
+    case Op::Status:
+      out.push(std::to_string(output.status));
+      break;
+
+    case Op::Cwd:
+      out.push(output.cwd.string());
+      break;
+
+    case Op::Emit:
+      out.flush();
+      streams[op.arg]->dump(fd);
+      break;
+
+    case Op::CheckSuccess:
+      ignore = output.status != 0;
+      break;
+
+    case Op::CheckFailure:
+      ignore = output.status == 0;
+      break;
+
+    case Op::CheckStream:
+      ignore = streams[op.arg]->empty();
+      break;
+
+    default:
+      break;
+    }
+  }
+
+  out.flush();
+}

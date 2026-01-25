@@ -96,3 +96,12 @@ TEST(Formatter, parse_unbalanced) {
 TEST(Formatter, parse_underflow_group) {
   EXPECT_ANY_THROW({ Formatter formatter("%s)("); });
 }
+
+TEST(Formatter, parse_literal_parens) {
+  Formatter formatter("%(%)");
+  std::vector<std::string_view> strtab{"(", ")"};
+  std::vector<Op> bytecode{Op::strtab(0), Op::strtab(1)};
+
+  EXPECT_EQ(formatter.strtab, strtab);
+  EXPECT_EQ(formatter.bytecode, bytecode);
+}

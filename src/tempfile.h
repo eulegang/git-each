@@ -17,6 +17,7 @@ public:
   void dump(int fd) const;
   const std::filesystem::path &path() const;
   int fd() const;
+  bool empty() const;
 };
 
 class TempInst final {

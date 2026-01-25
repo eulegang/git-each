@@ -91,7 +91,7 @@ struct Processor {
 
 Cli::Cli(int argc, char *argv[])
     : args{}, help{}, version{}, system{}, discover{}, jobs{1},
-      dir{std::nullopt} {
+      format{DEFAULT_FORMAT}, dir{std::nullopt} {
   Processor proc(this);
 
   for (int i = 0; i < argc; i++) {

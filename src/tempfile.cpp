@@ -93,3 +93,14 @@ void TempFile::dump(int fd) const {
     throw std::format("unable to dump file: {}", e);
   }
 }
+
+bool TempFile::empty() const {
+  const off_t size = lseek(_fd, 0, SEEK_END);
+
+  if (size == -1) {
+    int e = errno;
+    throw std::format("unable to find size of a file: {}", e);
+  }
+
+  return size == 0;
+}

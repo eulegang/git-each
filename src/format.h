@@ -40,7 +40,7 @@ struct Formatter {
   std::vector<Op> bytecode;
 
   Formatter(std::string_view);
-  void format(CmdOutput &);
+  void format(CmdOutput &, int fd);
 };
 
 #endif
