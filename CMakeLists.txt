@@ -41,3 +41,4 @@ foreach(SUITE ${TEST_DIRS})
   add_test(tests-${TEST_NAME} tests-${TEST_NAME})
 endforeach()
 
+install(TARGETS git-each RUNTIME DESTINATION bin)
