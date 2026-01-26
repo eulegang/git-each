@@ -101,6 +101,8 @@ Cmd::Args::Args(std::vector<std::string_view> args) {
     offsets[offset_index++] = buffer + buffer_index;
     buffer_index += arg.size() + 1;
   }
+
+  offsets[offset_index] = 0;
 }
 
 Cmd::Args::~Args() {
