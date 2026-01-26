@@ -2,6 +2,7 @@
 #include "cmd.h"
 #include <array>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 
 bool operator==(const Op a, const Op b) {
@@ -93,9 +94,12 @@ void validate(Formatter *formatter) {
         msg.push_back("underflowed grouping");
       }
       break;
+    case Op::Cwd:
+      if (op.arg != 0 && op.arg != 1) {
+        msg.push_back("invalid cwd argument");
+      }
     case Op::CheckSuccess:
     case Op::CheckFailure:
-    case Op::Cwd:
     case Op::Status:
       break;
     }
@@ -110,7 +114,8 @@ void validate(Formatter *formatter) {
   }
 }
 
-Formatter::Formatter(std::string_view fmt) : strtab{}, bytecode{} {
+Formatter::Formatter(std::string_view fmt, std::filesystem::path base_dir)
+    : base_dir{base_dir}, strtab{}, bytecode{} {
   size_t base = 0;
   bool interp = false;
 
@@ -148,7 +153,11 @@ Formatter::Formatter(std::string_view fmt) : strtab{}, bytecode{} {
         break;
 
       case 'c':
-        bytecode.push_back(Op::cwd());
+        bytecode.push_back(Op::cwd(0));
+        break;
+
+      case 'C':
+        bytecode.push_back(Op::cwd(1));
         break;
 
       case 'S':
@@ -256,7 +265,14 @@ void Formatter::format(CmdOutput &output, int fd) {
       break;
 
     case Op::Cwd:
-      out.push(output.cwd.string());
+      switch (op.arg) {
+      case 0:
+        out.push(std::filesystem::relative(output.cwd, base_dir).string());
+        break;
+      case 1:
+        out.push(output.cwd.string());
+        break;
+      }
       break;
 
     case Op::Emit:

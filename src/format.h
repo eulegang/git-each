@@ -22,7 +22,7 @@ struct Op {
 
   static Op strtab(size_t index) { return Op{.code = StrTab, .arg = index}; }
   static Op status() { return Op{.code = Status, .arg = 0}; }
-  static Op cwd() { return Op{.code = Cwd, .arg = 0}; }
+  static Op cwd(size_t index) { return Op{.code = Cwd, .arg = index}; }
   static Op emit(size_t index) { return Op{.code = Emit, .arg = index}; }
   static Op check_success() { return Op{.code = CheckSuccess, .arg = 0}; }
   static Op check_failure() { return Op{.code = CheckFailure, .arg = 0}; }
@@ -37,10 +37,11 @@ std::ostream &operator<<(std::ostream &, const Op &);
 bool operator==(const Op a, const Op b);
 
 struct Formatter {
+  std::filesystem::path base_dir;
   std::vector<std::string_view> strtab;
   std::vector<Op> bytecode;
 
-  Formatter(std::string_view);
+  Formatter(std::string_view, std::filesystem::path base_dir);
   void format(CmdOutput &, int fd);
 };
 

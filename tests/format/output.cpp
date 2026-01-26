@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 TempBase base("format-tests");
+const std::filesystem::path dir = "/home/xyz/proj";
 
 std::shared_ptr<CmdOutput> make_output() {
   TempInst inst = base.inst();
@@ -40,7 +41,7 @@ std::string run_formatter(Formatter &formatter,
 
 TEST(Formmatter, output_static) {
   auto output = make_output();
-  Formatter formatter("static text");
+  Formatter formatter("static text", dir);
 
   auto content = run_formatter(formatter, output);
   EXPECT_EQ(content, "static text");
@@ -48,7 +49,7 @@ TEST(Formmatter, output_static) {
 
 TEST(Formatter, output_status) {
   auto output = make_output();
-  Formatter formatter("%s");
+  Formatter formatter("%s", dir);
   {
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "0");
@@ -62,7 +63,14 @@ TEST(Formatter, output_status) {
 }
 TEST(Formatter, output_cwd) {
   auto output = make_output();
-  Formatter formatter("%c");
+  Formatter formatter("%c", dir);
+  auto content = run_formatter(formatter, output);
+  EXPECT_EQ(content, "thingy");
+}
+
+TEST(Formatter, output_cwd_abs) {
+  auto output = make_output();
+  Formatter formatter("%C", dir);
   auto content = run_formatter(formatter, output);
   EXPECT_EQ(content, "/home/xyz/proj/thingy");
 }
@@ -71,13 +79,13 @@ TEST(Formatter, output_output) {
   auto output = make_output();
   write(output->out->fd(), "hello", 5);
   {
-    Formatter formatter("%o");
+    Formatter formatter("%o", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "hello");
   }
 
   {
-    Formatter formatter("%e");
+    Formatter formatter("%e", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "");
   }
@@ -87,13 +95,13 @@ TEST(Formatter, output_error) {
   auto output = make_output();
   write(output->err->fd(), "hello", 5);
   {
-    Formatter formatter("%o");
+    Formatter formatter("%o", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "");
   }
 
   {
-    Formatter formatter("%e");
+    Formatter formatter("%e", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "hello");
   }
@@ -104,13 +112,13 @@ TEST(Formatter, output_status_check) {
   output->status = 0;
 
   {
-    Formatter formatter("%S.");
+    Formatter formatter("%S.", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, ".");
   }
 
   {
-    Formatter formatter("%F!");
+    Formatter formatter("%F!", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "");
   }
@@ -118,13 +126,13 @@ TEST(Formatter, output_status_check) {
   output->status = 32;
 
   {
-    Formatter formatter("%S.");
+    Formatter formatter("%S.", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "");
   }
 
   {
-    Formatter formatter("%F!");
+    Formatter formatter("%F!", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "!");
   }
@@ -135,13 +143,13 @@ TEST(Formatter, output_grouped) {
   output->status = 0;
 
   {
-    Formatter formatter("%S(Succeeded) - %s");
+    Formatter formatter("%S(Succeeded) - %s", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "Succeeded - 0");
   }
 
   {
-    Formatter formatter("%F(Failed) - %s");
+    Formatter formatter("%F(Failed) - %s", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, " - 0");
   }
@@ -149,13 +157,13 @@ TEST(Formatter, output_grouped) {
   output->status = 32;
 
   {
-    Formatter formatter("%S(Succeeded) - %s");
+    Formatter formatter("%S(Succeeded) - %s", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, " - 32");
   }
 
   {
-    Formatter formatter("%F(Failed) - %s");
+    Formatter formatter("%F(Failed) - %s", dir);
     auto content = run_formatter(formatter, output);
     EXPECT_EQ(content, "Failed - 32");
   }
@@ -164,7 +172,7 @@ TEST(Formatter, output_grouped) {
 TEST(Formatter, output_grouped_nested) {
   auto output = make_output();
   output->status = 0;
-  Formatter formatter("%S(Succeeded %s%O( xyz))");
+  Formatter formatter("%S(Succeeded %s%O( xyz))", dir);
 
   {
     auto content = run_formatter(formatter, output);

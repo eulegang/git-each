@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
       return 0;
     }
 
-    Formatter formatter{cli.format};
+    Formatter formatter{cli.format, start_path};
 
     std::vector<std::string_view> args;
     if (!cli.system) {
