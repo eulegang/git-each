@@ -114,6 +114,12 @@ Formatter::Formatter(std::string_view fmt) : strtab{}, bytecode{} {
   size_t base = 0;
   bool interp = false;
 
+  const auto push_strtab = [this](std::string_view view) {
+    const size_t index = strtab.size();
+    strtab.push_back(view);
+    bytecode.push_back(Op::strtab(index));
+  };
+
   const auto commit_strtab = [this, fmt, &base](size_t i) {
     if (base - i != 0) {
       const size_t index = this->strtab.size();
@@ -128,7 +134,6 @@ Formatter::Formatter(std::string_view fmt) : strtab{}, bytecode{} {
     char ch = fmt[i];
 
     if (interp) {
-      size_t index;
       switch (ch) {
       case 's':
         bytecode.push_back(Op::status());
@@ -163,15 +168,15 @@ Formatter::Formatter(std::string_view fmt) : strtab{}, bytecode{} {
         break;
 
       case '(':
-        index = strtab.size();
-        strtab.push_back("(");
-        bytecode.push_back(Op::strtab(index));
+        push_strtab("(");
         break;
 
       case ')':
-        index = strtab.size();
-        strtab.push_back(")");
-        bytecode.push_back(Op::strtab(index));
+        push_strtab(")");
+        break;
+
+      case 'n':
+        push_strtab("\n");
         break;
 
       default:
