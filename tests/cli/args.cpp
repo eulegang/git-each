@@ -137,3 +137,18 @@ TEST(CLI, empty_flags) {
   EXPECT_FALSE(cli.system);
   EXPECT_FALSE(cli.discover);
 }
+
+TEST(CLI, parse_combo) {
+  Cli cli{
+      "git-each", "-f", "%s\n%o", "--", "status", "-s",
+  };
+
+  EXPECT_EQ(cli.format, "%s\n%o");
+
+  std::vector<std::string_view> expected{
+      "status",
+      "-s",
+  };
+
+  EXPECT_EQ(cli.args, expected);
+}

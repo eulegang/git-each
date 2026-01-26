@@ -64,6 +64,7 @@ struct Processor {
 
     case ProcState::Format:
       cli->format = str;
+      state = ProcState::Blank;
       break;
 
     case ProcState::Jobs:
