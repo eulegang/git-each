@@ -106,7 +106,7 @@ void validate(Formatter *formatter) {
   }
 
   if (msg.size() > 0) {
-    throw msg;
+    throw FormatterException("invalid format", msg);
   }
 }
 
@@ -175,7 +175,8 @@ Formatter::Formatter(std::string_view fmt) : strtab{}, bytecode{} {
         break;
 
       default:
-        throw "invalid operation code";
+        throw FormatterException(std::format("invalid escape code {}", ch),
+                                 std::vector<std::string>());
       }
 
       base = i + 1;

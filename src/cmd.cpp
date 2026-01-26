@@ -3,16 +3,17 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <format>
 #include <grp.h>
 #include <memory>
 #include <pwd.h>
 #include <ranges>
+#include <stdexcept>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <system_error>
 #include <unistd.h>
 
 std::vector<gid_t> my_groups(uid_t uid) {
@@ -81,13 +82,13 @@ std::string resolve(std::string_view prog) {
     }
   }
 
-  throw "unable to resolve command";
+  throw std::runtime_error("unable to resolve command");
 }
 
 Cmd::Args::Args(std::vector<std::string_view> args) {
 
   if (args.size() >= 64)
-    throw "invariant: can't handle over 64 arguments";
+    throw std::runtime_error("invariant: can't handle over 64 arguments");
 
   buffer = new char[8192];
   offsets = new char *[64];
@@ -111,7 +112,7 @@ Cmd::Cmd(std::vector<std::string_view> args, TempBase *base)
     : tmp_base{base}, args{args} {
 
   if (args.size() == 0) {
-    throw "invalid command";
+    throw std::runtime_error("invalid command");
   }
 
   resolved = resolve(args[0]);
@@ -127,7 +128,8 @@ std::shared_ptr<CmdOutput> Cmd::run(std::filesystem::path dir) {
   pid_t pid = fork();
 
   if (pid == -1) {
-    throw "failed to fork child";
+    throw std::system_error(errno, std::system_category(),
+                            "failed to fork process");
   }
 
   if (pid == 0) {
@@ -135,21 +137,24 @@ std::shared_ptr<CmdOutput> Cmd::run(std::filesystem::path dir) {
     err->dup(2);
     int res = chdir(dir.c_str());
     if (res == -1) {
-      throw "failed to chdir into directory";
+      throw std::system_error(errno, std::system_category(),
+                              "failed to chdir into directory");
+      ;
     }
 
     Args args(this->args);
     res = execv(this->resolved.c_str(), args.offsets);
 
     if (res == -1) {
-      int e = errno;
-      throw std::format("failed to exec new process: {}", e);
+      throw std::system_error(errno, std::system_category(),
+                              "failed to execute command");
     }
   } else {
     pid_t res = waitpid(pid, &status, 0);
 
     if (res == -1) {
-      throw "failed to wait for child"; // TODO: figure out an exception
+      throw std::system_error(errno, std::system_category(),
+                              "failed to wait for child");
     }
   }
 

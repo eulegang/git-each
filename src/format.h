@@ -2,6 +2,7 @@
 #define _GIT_EACH_FMT_H
 
 #include "cmd.h"
+#include <exception>
 #include <string_view>
 
 struct Op {
@@ -41,6 +42,16 @@ struct Formatter {
 
   Formatter(std::string_view);
   void format(CmdOutput &, int fd);
+};
+
+class FormatterException : public std::exception {
+public:
+  std::string title;
+  std::vector<std::string> details;
+
+  FormatterException(std::string title, std::vector<std::string> details)
+      : title{title}, details{details} {};
+  const char *what() const noexcept override { return title.c_str(); };
 };
 
 #endif

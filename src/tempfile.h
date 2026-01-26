@@ -2,8 +2,23 @@
 #define _GIT_EACH_TEMPFILE_H
 
 #include <atomic>
+#include <cstring>
+#include <exception>
 #include <filesystem>
+#include <format>
 #include <string_view>
+
+class TempFileException : public std::exception {
+  std::string message;
+
+public:
+  TempFileException(const std::filesystem::path &path, std::string_view context,
+                    int err) {
+    std::string err_msg(strerror(err));
+    message = std::format("{} {} {}", err_msg, path.string(), context);
+  }
+  const char *what() const noexcept override { return message.c_str(); }
+};
 
 class TempFile final {
   int _fd;

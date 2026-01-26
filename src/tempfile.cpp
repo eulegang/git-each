@@ -41,10 +41,8 @@ TempInst::TempInst(std::shared_ptr<std::filesystem::path> path,
 
 TempFile::TempFile(path_t path) : _path{path} {
   _fd = ::open(path.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-  int err = errno;
   if (_fd == -1) {
-    throw std::format("failed to open temp file: {}",
-                      err); // TODO: make an actual exception
+    throw TempFileException(path, "open", errno);
   }
 }
 
@@ -71,7 +69,7 @@ void TempFile::dup(int fd) const {
   int res = dup2(_fd, fd);
 
   if (res == -1) {
-    throw "failed to set fd";
+    throw TempFileException(_path, "dup", errno);
   }
 }
 
@@ -81,16 +79,13 @@ void TempFile::dump(int fd) const {
   off_t offset = 0;
 
   if (size == -1) {
-    int e = errno;
-    throw std::format("unable to find size of a file: {}", e);
+    throw TempFileException(_path, "lseek", errno);
   }
 
   res = sendfile(fd, _fd, &offset, size);
 
   if (res == -1) {
-    int e = errno;
-    perror("sendfile");
-    throw std::format("unable to dump file: {}", e);
+    throw TempFileException(_path, "lseek", errno);
   }
 }
 
@@ -98,8 +93,7 @@ bool TempFile::empty() const {
   const off_t size = lseek(_fd, 0, SEEK_END);
 
   if (size == -1) {
-    int e = errno;
-    throw std::format("unable to find size of a file: {}", e);
+    throw TempFileException(_path, "lseek", errno);
   }
 
   return size == 0;
