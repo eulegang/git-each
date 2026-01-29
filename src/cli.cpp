@@ -75,24 +75,21 @@ struct Processor {
       if (result.ec == std::errc{} && result.ptr == str.data() + str.size()) {
         cli->jobs = res;
       } else {
-        cli->jobs = std::thread::hardware_concurrency();
+        return;
       }
       state = ProcState::Blank;
       break;
     }
   }
 
-  void finalize() {
-    if (state == ProcState::Jobs) {
-      cli->jobs = std::thread::hardware_concurrency();
-      state = ProcState::Blank;
-    }
-  }
+  void finalize() {}
 };
 
 Cli::Cli(int argc, char *argv[])
-    : args{}, help{}, version{}, system{}, discover{}, jobs{1},
-      format{DEFAULT_FORMAT}, dir{std::nullopt} {
+    : args{}, help{}, version{}, system{}, discover{}, format{DEFAULT_FORMAT},
+      dir{std::nullopt} {
+  jobs = std::thread::hardware_concurrency();
+
   Processor proc(this);
 
   for (int i = 0; i < argc; i++) {
@@ -103,8 +100,10 @@ Cli::Cli(int argc, char *argv[])
 }
 
 Cli::Cli(std::initializer_list<std::string_view> args)
-    : args{}, help{}, version{}, system{}, discover{}, jobs{1},
-      format{DEFAULT_FORMAT}, dir{std::nullopt} {
+    : args{}, help{}, version{}, system{}, discover{}, format{DEFAULT_FORMAT},
+      dir{std::nullopt} {
+  jobs = std::thread::hardware_concurrency();
+
   Processor proc(this);
 
   for (const auto &arg : args) {

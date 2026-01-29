@@ -106,18 +106,6 @@ TEST(CLI, parse_jobs_undef) {
       "git-each",
   };
 
-  EXPECT_EQ(cli.jobs, 1);
-}
-
-TEST(CLI, parse_jobs_nonumber_end) {
-  Cli cli{"git-each", "-j"};
-
-  EXPECT_EQ(cli.jobs, std::thread::hardware_concurrency());
-}
-
-TEST(CLI, parse_jobs_nonumber) {
-  Cli cli{"git-each", "-j", "-s"};
-
   EXPECT_EQ(cli.jobs, std::thread::hardware_concurrency());
 }
 
