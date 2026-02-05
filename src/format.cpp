@@ -32,7 +32,8 @@ public:
           int bytes = write(fd, str.data() + cur, str.size());
 
           if (bytes == -1) {
-            throw std::system_error();
+            throw std::system_error(errno, std::system_category(),
+                                    "flushing output");
           }
 
           cur += bytes;
@@ -50,7 +51,7 @@ public:
   void flush() {
     ssize_t bytes = write(fd, buf, idx);
     if (bytes == -1)
-      throw std::system_error();
+      throw std::system_error(errno, std::system_category(), "flushing output");
 
     if (bytes < (ssize_t)idx) {
       memmove(buf, buf + bytes, idx - bytes);

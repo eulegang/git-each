@@ -1,4 +1,4 @@
-name: CMake on multiple platforms
+name: Building ci
 on:
   push:
   pull_request:
