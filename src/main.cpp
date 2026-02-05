@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <iostream>
 #include <system_error>
+#include <thread>
 
 #include "cli.h"
 #include "comms.h"
