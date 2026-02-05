@@ -106,7 +106,7 @@ TEST(CLI, parse_jobs_undef) {
       "git-each",
   };
 
-  EXPECT_EQ(cli.jobs, std::thread::hardware_concurrency());
+  EXPECT_EQ(cli.jobs, (int)std::thread::hardware_concurrency());
 }
 
 TEST(CLI, parse_jobs_specified) {

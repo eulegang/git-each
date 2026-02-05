@@ -77,7 +77,7 @@ TEST(Formatter, output_cwd_abs) {
 
 TEST(Formatter, output_output) {
   auto output = make_output();
-  write(output->out->fd(), "hello", 5);
+  ASSERT_EQ(write(output->out->fd(), "hello", 5), 5);
   {
     Formatter formatter("%o", dir);
     auto content = run_formatter(formatter, output);
@@ -93,7 +93,7 @@ TEST(Formatter, output_output) {
 
 TEST(Formatter, output_error) {
   auto output = make_output();
-  write(output->err->fd(), "hello", 5);
+  ASSERT_EQ(write(output->err->fd(), "hello", 5), 5);
   {
     Formatter formatter("%o", dir);
     auto content = run_formatter(formatter, output);
@@ -179,7 +179,7 @@ TEST(Formatter, output_grouped_nested) {
     EXPECT_EQ(content, "Succeeded 0");
   }
 
-  write(output->out->fd(), "hello", 5);
+  ASSERT_EQ(write(output->out->fd(), "hello", 5), 5);
 
   {
     auto content = run_formatter(formatter, output);

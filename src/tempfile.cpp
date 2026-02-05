@@ -1,15 +1,18 @@
 
 #include "tempfile.h"
 
+#include <cstring>
 #include <filesystem>
 #include <memory>
 
 #include <fcntl.h>
-#include <sys/sendfile.h>
 #include <sys/stat.h>
+#include <system_error>
 #include <unistd.h>
 
-#include <format>
+#ifdef HAVE_SEND_FILE_LINUX
+#include <sys/sendfile.h>
+#endif
 
 using path_t = std::filesystem::path;
 
@@ -73,20 +76,74 @@ void TempFile::dup(int fd) const {
   }
 }
 
-void TempFile::dump(int fd) const {
-  ssize_t res;
-  const off_t size = lseek(_fd, 0, SEEK_END);
+#ifdef HAVE_SEND_FILE_LINUX
+void pump(int out_fd, int in_fd, size_t size) {
   off_t offset = 0;
+  size_t sent = 0;
+
+  while (sent < size) {
+    int bytes = sendfile(out_fd, in_fd, &offset, size);
+    if (bytes == -1) {
+      throw std::system_error(errno, std::system_category(), "sendfile");
+    }
+
+    sent += bytes;
+  }
+}
+
+#else
+void pump(int out_fd, int in_fd, size_t size) {
+  if (lseek(in_fd, 0, SEEK_SET) == -1)
+    throw std::system_error(errno, std::system_category(), "seek begin");
+  ;
+  unsigned char buf[512] = {};
+  size_t len = 0;
+  ssize_t bytes = 0;
+
+  while (size > 0) {
+    bytes = read(in_fd, buf + len, 512 - len);
+    if (bytes == -1) {
+      throw std::system_error(errno, std::system_category(),
+                              "read file descriptor");
+    }
+
+    if (bytes == 0)
+      break;
+    len += bytes;
+    size -= bytes;
+    bytes = write(out_fd, buf, len);
+    if (bytes == -1) {
+      throw std::system_error(errno, std::system_category(),
+                              "write file descriptor");
+    }
+
+    memmove(buf, buf + bytes, len - bytes);
+
+    len -= bytes;
+  }
+
+  bytes = 0;
+  while (len != 0) {
+    int res = write(out_fd, buf + bytes, len);
+    if (res == -1) {
+      throw std::system_error(errno, std::system_category(),
+                              "write file descriptor");
+    }
+
+    bytes += res;
+    len -= res;
+  }
+}
+#endif
+
+void TempFile::dump(int fd) const {
+  const off_t size = lseek(_fd, 0, SEEK_END);
 
   if (size == -1) {
     throw TempFileException(_path, "lseek", errno);
   }
 
-  res = sendfile(fd, _fd, &offset, size);
-
-  if (res == -1) {
-    throw TempFileException(_path, "lseek", errno);
-  }
+  pump(fd, _fd, size);
 }
 
 bool TempFile::empty() const {
