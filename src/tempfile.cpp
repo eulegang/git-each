@@ -1,16 +1,18 @@
 
 #include "tempfile.h"
 
-#include <climits>
 #include <cstring>
 #include <filesystem>
 #include <memory>
 
 #include <fcntl.h>
-#include <sys/sendfile.h>
 #include <sys/stat.h>
 #include <system_error>
 #include <unistd.h>
+
+#ifdef HAVE_SEND_FILE_LINUX
+#include <sys/sendfile.h>
+#endif
 
 using path_t = std::filesystem::path;
 
@@ -74,7 +76,7 @@ void TempFile::dup(int fd) const {
   }
 }
 
-#ifndef HAVE_SEND_FILE_LINUX
+#ifdef HAVE_SEND_FILE_LINUX
 void pump(int out_fd, int in_fd, size_t size) {
   off_t offset = 0;
   size_t sent = 0;
