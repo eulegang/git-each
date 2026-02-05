@@ -13,7 +13,13 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         build_type: [Release]
-        c++_compiler: [g++, clang++]
+        cpp_compiler: [g++, clang++]
+        exclude:
+          - os: macos-latest
+            cpp_compiler: g++
+          - os: ubuntu-latest
+            cpp_compiler: clang++
+
 
     steps:
     - uses: actions/checkout@v4
