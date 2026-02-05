@@ -39,7 +39,6 @@ public:
           cur += bytes;
         }
 
-        write(fd, str.data(), str.size());
         return;
       }
     }
