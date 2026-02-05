@@ -4,8 +4,8 @@
 #include <cstring>
 #include <filesystem>
 #include <iostream>
-#include <stdio.h>
 #include <system_error>
+#include <unistd.h>
 
 bool operator==(const Op a, const Op b) {
   return a.code == b.code && a.arg == b.arg;
