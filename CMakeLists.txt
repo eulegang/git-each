@@ -19,6 +19,10 @@ include_directories(src/)
 include(CheckSymbolExists)
 check_symbol_exists(sendfile "sys/sendfile.h" HAVE_SEND_FILE_LINUX)
 
+if(HAVE_SEND_FILE_LINUX)
+  add_definitions(-DHAVE_SEND_FILE_LINUX)
+endif()
+
 include(cmake/tests.cmake)
 
 install(TARGETS git-each RUNTIME DESTINATION bin)
