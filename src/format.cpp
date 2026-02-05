@@ -4,6 +4,7 @@
 #include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <stdio.h>
 #include <system_error>
 
 bool operator==(const Op a, const Op b) {
