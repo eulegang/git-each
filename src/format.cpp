@@ -4,6 +4,7 @@
 #include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <system_error>
 
 bool operator==(const Op a, const Op b) {
   return a.code == b.code && a.arg == b.arg;
@@ -24,6 +25,18 @@ public:
       flush();
 
       if (str.size() > CAP) {
+        size_t cur = 0;
+
+        while (cur != str.size()) {
+          int bytes = write(fd, str.data() + cur, str.size());
+
+          if (bytes == -1) {
+            throw std::system_error();
+          }
+
+          cur += bytes;
+        }
+
         write(fd, str.data(), str.size());
         return;
       }
@@ -34,8 +47,16 @@ public:
   }
 
   void flush() {
-    write(fd, buf, idx);
-    idx = 0;
+    ssize_t bytes = write(fd, buf, idx);
+    if (bytes == -1)
+      throw std::system_error();
+
+    if (bytes < (ssize_t)idx) {
+      memmove(buf, buf + bytes, idx - bytes);
+      idx -= bytes;
+    } else {
+      idx = 0;
+    }
   }
 };
 
