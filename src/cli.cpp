@@ -7,7 +7,7 @@
 
 #include "cli.h"
 
-static const std::string_view DEFAULT_FORMAT = "%c%(%s%)\n%O%o%E%e";
+static const std::string_view DEFAULT_FORMAT = "%c%(%s%)%n%O%o%E%e";
 
 enum class ProcState {
   First,
