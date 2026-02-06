@@ -93,6 +93,9 @@ void pump(int out_fd, int in_fd, size_t size) {
 
 #else
 void pump(int out_fd, int in_fd, size_t size) {
+  if (lseek(in_fd, 0, SEEK_SET) == -1)
+    throw std::system_error(errno, std::system_category(), "seek begin");
+  ;
   unsigned char buf[512] = {};
   size_t len = 0;
   ssize_t bytes = 0;
@@ -115,6 +118,8 @@ void pump(int out_fd, int in_fd, size_t size) {
     }
 
     memmove(buf, buf + bytes, len - bytes);
+
+    len -= bytes;
   }
 
   bytes = 0;
