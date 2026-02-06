@@ -41,38 +41,24 @@ std::vector<gid_t> my_groups(uid_t uid) {
   return groups;
 }
 
-std::string resolve(std::string_view prog) {
-  if (prog.starts_with("/")) {
-    return std::string(prog);
+struct Checker {
+
+  uid_t uid;
+  std::vector<gid_t> gids;
+
+  Checker() {
+    uid = getuid();
+    gids = my_groups(uid);
   }
 
-  if (prog.starts_with("./") || prog.starts_with("../")) {
-    std::filesystem::path base = std::filesystem::current_path();
-    std::filesystem::path cur(prog);
-
-    return std::string(base / prog);
-  }
-
-  std::filesystem::path prog_path{prog};
-
-  const uid_t uid = getuid();
-  const std::vector<gid_t> gids = my_groups(uid);
-
-  std::string_view view{getenv("PATH")};
-  constexpr std::string_view delim{":"};
-  for (const auto &range : view | std::views::split(delim)) {
-    std::string_view dir{range.data(), range.size()};
-    std::filesystem::path env_path{dir};
-
-    std::filesystem::path exec_path = env_path / prog_path;
-
-    if (!std::filesystem::is_regular_file(exec_path)) {
-      continue;
+  bool is_executable(std::filesystem::path path) {
+    if (!std::filesystem::is_regular_file(path)) {
+      return false;
     }
 
     struct stat stat_value;
-    if (stat(exec_path.c_str(), &stat_value) == -1) {
-      continue;
+    if (stat(path.c_str(), &stat_value) == -1) {
+      return false;
     }
 
     const bool user =
@@ -84,7 +70,41 @@ std::string resolve(std::string_view prog) {
 
     const bool world = (stat_value.st_mode & S_IXOTH) != 0;
 
-    if (user || grp || world) {
+    return user || grp || world;
+  }
+};
+
+std::string resolve(std::string_view prog) {
+  Checker checker;
+  if (prog.starts_with("/") && checker.is_executable(prog)) {
+    if (!checker.is_executable(prog))
+      throw std::runtime_error("unable to resolve command");
+
+    return std::string(prog);
+  }
+
+  if (prog.starts_with("./") || prog.starts_with("../")) {
+    std::filesystem::path base = std::filesystem::current_path();
+    std::filesystem::path cur(prog);
+    std::filesystem::path path = base / prog;
+
+    if (!checker.is_executable(path)) {
+      throw std::runtime_error("unable to resolve command");
+    }
+
+    return std::string(path);
+  }
+
+  std::filesystem::path prog_path{prog};
+  std::string_view view{getenv("PATH")};
+  constexpr std::string_view delim{":"};
+  for (const auto &range : view | std::views::split(delim)) {
+    std::string_view dir{range.data(), range.size()};
+    std::filesystem::path env_path{dir};
+
+    std::filesystem::path exec_path = env_path / prog_path;
+
+    if (checker.is_executable(exec_path)) {
       return exec_path.string();
     }
   }
