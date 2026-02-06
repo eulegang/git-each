@@ -42,8 +42,15 @@ std::vector<gid_t> my_groups(uid_t uid) {
 }
 
 std::string resolve(std::string_view prog) {
-  if (prog.starts_with("/") || prog.starts_with("./")) {
+  if (prog.starts_with("/")) {
     return std::string(prog);
+  }
+
+  if (prog.starts_with("./") || prog.starts_with("../")) {
+    std::filesystem::path base = std::filesystem::current_path();
+    std::filesystem::path cur(prog);
+
+    return std::string(base / prog);
   }
 
   std::filesystem::path prog_path{prog};
