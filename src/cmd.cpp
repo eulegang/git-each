@@ -17,7 +17,11 @@
 #include <unistd.h>
 
 std::vector<gid_t> my_groups(uid_t uid) {
-  std::vector<gid_t> groups;
+  static std::vector<gid_t> groups;
+
+  if (!groups.empty()) {
+    return groups;
+  }
 
   struct passwd *passwd = getpwuid(uid);
   std::string_view username{passwd->pw_name};
@@ -41,43 +45,9 @@ std::vector<gid_t> my_groups(uid_t uid) {
   return groups;
 }
 
-struct Checker {
-
-  uid_t uid;
-  std::vector<gid_t> gids;
-
-  Checker() {
-    uid = getuid();
-    gids = my_groups(uid);
-  }
-
-  bool is_executable(std::filesystem::path path) {
-    if (!std::filesystem::is_regular_file(path)) {
-      return false;
-    }
-
-    struct stat stat_value;
-    if (stat(path.c_str(), &stat_value) == -1) {
-      return false;
-    }
-
-    const bool user =
-        (stat_value.st_mode & S_IXUSR) != 0 && stat_value.st_uid == uid;
-
-    const bool grp =
-        (stat_value.st_mode & S_IXGRP) != 0 &&
-        std::find(gids.begin(), gids.end(), stat_value.st_gid) == gids.end();
-
-    const bool world = (stat_value.st_mode & S_IXOTH) != 0;
-
-    return user || grp || world;
-  }
-};
-
 std::string resolve(std::string_view prog) {
-  Checker checker;
-  if (prog.starts_with("/") && checker.is_executable(prog)) {
-    if (!checker.is_executable(prog))
+  if (prog.starts_with("/")) {
+    if (!is_executable(prog))
       throw std::runtime_error("unable to resolve command");
 
     return std::string(prog);
@@ -88,7 +58,7 @@ std::string resolve(std::string_view prog) {
     std::filesystem::path cur(prog);
     std::filesystem::path path = base / prog;
 
-    if (!checker.is_executable(path)) {
+    if (!is_executable(path)) {
       throw std::runtime_error("unable to resolve command");
     }
 
@@ -104,7 +74,7 @@ std::string resolve(std::string_view prog) {
 
     std::filesystem::path exec_path = env_path / prog_path;
 
-    if (checker.is_executable(exec_path)) {
+    if (is_executable(exec_path)) {
       return exec_path.string();
     }
   }
@@ -189,4 +159,29 @@ std::shared_ptr<CmdOutput> Cmd::run(std::filesystem::path dir) {
 
   return std::make_shared<CmdOutput>(status, dir, std::move(out),
                                      std::move(err));
+}
+
+bool is_executable(std::filesystem::path path) {
+  if (!std::filesystem::is_regular_file(path)) {
+    return false;
+  }
+
+  struct stat stat_value;
+  if (stat(path.c_str(), &stat_value) == -1) {
+    return false;
+  }
+
+  const uid_t uid = getuid();
+  const std::vector<gid_t> gids = my_groups(uid);
+
+  const bool user =
+      (stat_value.st_mode & S_IXUSR) != 0 && stat_value.st_uid == uid;
+
+  const bool grp =
+      (stat_value.st_mode & S_IXGRP) != 0 &&
+      std::find(gids.begin(), gids.end(), stat_value.st_gid) == gids.end();
+
+  const bool world = (stat_value.st_mode & S_IXOTH) != 0;
+
+  return user || grp || world;
 }

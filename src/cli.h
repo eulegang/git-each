@@ -16,6 +16,8 @@ struct Cli {
   int jobs;
   std::string_view format;
   std::optional<std::filesystem::path> dir;
+  std::optional<std::filesystem::path> file;
+  std::optional<std::filesystem::path> interpreter;
 
   Cli(int argc, char *argv[]);
   Cli(std::initializer_list<std::string_view>);

@@ -35,4 +35,6 @@ public:
   std::shared_ptr<CmdOutput> run(std::filesystem::path dir);
 };
 
+bool is_executable(std::filesystem::path path);
+
 #endif

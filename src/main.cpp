@@ -1,4 +1,5 @@
 
+#include <cstdlib>
 #include <exception>
 #include <filesystem>
 #include <iostream>
@@ -6,6 +7,7 @@
 #include <thread>
 
 #include "cli.h"
+#include "cmd.h"
 #include "comms.h"
 #include "discover.h"
 #include "format.h"
@@ -13,6 +15,8 @@
 #include "worker.h"
 
 using path_t = std::filesystem::path;
+
+std::string resolve_path(std::filesystem::path);
 
 int main(int argc, char *argv[]) {
   try {
@@ -40,14 +44,29 @@ int main(int argc, char *argv[]) {
 
     Formatter formatter{cli.format, start_path};
 
+    std::string file_backing;
     std::vector<std::string_view> args;
-    if (!cli.system) {
-      args.push_back("git");
+    if (cli.system) {
+      args = std::move(cli.args);
+    } else if (cli.file) {
+      const char *interp = getenv("SHELL");
+      if (cli.interpreter) {
+        interp = cli.interpreter->c_str();
+      }
+
+      file_backing = resolve_path(*cli.file);
+
+      args.push_back(interp);
+      args.push_back(file_backing);
+
       for (const auto &arg : cli.args) {
         args.push_back(arg);
       }
     } else {
-      args = std::move(cli.args);
+      args.push_back("git");
+      for (const auto &arg : cli.args) {
+        args.push_back(arg);
+      }
     }
 
     FanOut<path_t> to_workers;
@@ -82,5 +101,17 @@ int main(int argc, char *argv[]) {
   } catch (std::exception &e) {
     std::cerr << e.what() << std::endl;
     return 2;
+  }
+}
+
+std::string resolve_path(std::filesystem::path path) {
+  if (!is_executable(path))
+    throw std::runtime_error("unable to resolve command");
+
+  if (path.has_root_path()) {
+    return path.string();
+  } else {
+    std::filesystem::path base = std::filesystem::current_path();
+    return (base / path).lexically_normal().string();
   }
 }

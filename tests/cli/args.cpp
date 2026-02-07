@@ -101,6 +101,24 @@ TEST(CLI, parse_discover) {
   EXPECT_TRUE(shrt.discover);
 }
 
+TEST(CLI, parser_file) {
+  Cli cli{"git-each", "--file", "run"};
+
+  EXPECT_EQ(cli.file->string(), "run");
+  Cli shrt{"git-each", "-r", "run"};
+
+  EXPECT_EQ(cli.file->string(), "run");
+}
+
+TEST(CLI, parser_interpreter) {
+  Cli cli{"git-each", "--interpreter", "python"};
+
+  EXPECT_EQ(cli.interpreter->string(), "python");
+  Cli shrt{"git-each", "-r", "python"};
+
+  EXPECT_EQ(cli.interpreter->string(), "python");
+}
+
 TEST(CLI, parse_jobs_undef) {
   Cli cli{
       "git-each",
@@ -124,6 +142,8 @@ TEST(CLI, empty_flags) {
   EXPECT_FALSE(cli.version);
   EXPECT_FALSE(cli.system);
   EXPECT_FALSE(cli.discover);
+  EXPECT_EQ(cli.file, std::nullopt);
+  EXPECT_EQ(cli.interpreter, std::nullopt);
 }
 
 TEST(CLI, parse_combo) {
