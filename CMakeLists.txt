@@ -26,3 +26,5 @@ endif()
 include(cmake/tests.cmake)
 
 install(TARGETS git-each RUNTIME DESTINATION bin)
+install(FILES docs/git-each.1 DESTINATION share/man/man1)
+install(FILES docs/git-each-format.5 DESTINATION share/man/man5)

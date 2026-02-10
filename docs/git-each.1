@@ -1,0 +1,50 @@
+.TH GIT-EACH "1" "February 2026" "eulegang" "User Commands"
+.SH NAME
+git-each \- broadcast commands to git repositories
+.SH SYNOPSIS
+.B git each
+[\fI\,OPTION\/\fR]... [\fI\,COMMAND\/\fR]...
+.SH DESCRIPTION
+.PP
+
+.TP
+\fB-d, --directory DIR\fP
+search for git repositories under DIR. defaults to the current working directory.
+
+.TP
+\fB-s, --system\fP
+the command is a system one instead of git oriented
+
+.TP
+\fB-D, --discover\fP
+just search and print repositories (do not run an action)
+
+.TP
+\fB-j, --jobs N\fP
+the amount of threads to run while processing the commands
+
+.TP
+\fB-f, --format FORMAT\fP
+the format of the report after a command has finished.
+see git-each-format for more information.
+
+.TP
+\fB-F, --file FILE\fP
+a script to execute instead of a running a command
+
+.TP
+\fB-I, --interpreter INTERP\fP
+an interpreter to run the `SCRIPT`. by default uses `SHELL`
+
+.SH AUTHOR
+eulegang
+
+.SH "REPORTING BUGS"
+https://github.com/eulegang/git-each/issues
+
+.SH COPYRIGHT
+MIT License
+
+.SH "SEE ALSO"
+git-each-format
+

@@ -1,0 +1,84 @@
+.TH GIT-EACH-FORMAT "5" "February 2026" "eulegang" "FORMAT"
+.SH NAME
+git-each-format \- A format for reporting command output
+.SH SYNOPSIS
+git each -f <FORMAT>
+.SH DESCRIPTION
+.PP
+This format is seen in \fBgit each -f <FORMAT>\fP.
+
+This format is a mini-interpreter with codes that start with \fB%\fP or are parenthesis
+
+The default format is \fB%c%(%s%)%n%O%o%E%e\fP.
+
+Text other than codes are statically inlined in the format
+
+.TP
+\fB%o\fP
+
+print the standard output of the command
+
+.TP
+\fB%e\fP
+
+print the standard output of the command
+
+.TP
+\fB%s\fP
+
+output the status of the command
+
+.TP
+\fB%c\fP
+
+output the relative path where the command was ran.
+
+.TP
+\fB%C\fP
+
+output the absolute path where the command was ran.
+
+.TP
+\fB%S\fP
+
+Checks to see whether the command was successful and only run the next instruction if so.
+
+.TP
+\fB%S\fP
+
+Checks to see whether the command had failed and only run the next instruction if so.
+
+.TP
+\fB%O\fP
+
+Checks to see whether the command had output to standard output and only run the next instruction if so.
+
+.TP
+\fB%E\fP
+
+Checks to see whether the command had output to standard error and only run the next instruction if so.
+
+.TP
+\fB(\fP
+
+Begins a group.  Useful to ensure multiple codes are run on a conditional
+
+.TP
+\fB)\fP
+
+Ends a group.
+
+.TP
+\fB%(\fP
+
+Outputs a literal (
+
+.TP
+\fB%)\fP
+
+Outputs a literal )
+
+.TP
+\fB%n\fP
+
+Outputs a newline character
