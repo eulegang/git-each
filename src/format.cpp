@@ -210,6 +210,10 @@ Formatter::Formatter(std::string_view fmt, std::filesystem::path base_dir)
         push_strtab("\n");
         break;
 
+      case '%':
+        push_strtab("%");
+        break;
+
       default:
         throw FormatterException(std::format("invalid escape code {}", ch),
                                  std::vector<std::string>());
