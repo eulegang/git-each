@@ -7,6 +7,14 @@ git-each \- broadcast commands to git repositories
 .SH DESCRIPTION
 .PP
 
+Find all git repositories under a directory, run a command and report process outcomes according to a format.
+
+The command may be git oriented or a system level command.
+
+Each command that is run has \fBGIT_EACH_DIR\fP set to the relative (to the directory this command was run from) dir the command was run on.
+
+The format is specified in the git-each-format page.
+
 .TP
 \fB-d, --directory DIR\fP
 search for git repositories under DIR. defaults to the current working directory.
