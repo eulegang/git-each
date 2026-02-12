@@ -16,6 +16,8 @@
 #include <system_error>
 #include <unistd.h>
 
+extern char **environ;
+
 std::vector<gid_t> my_groups(uid_t uid) {
   static std::vector<gid_t> groups;
 
@@ -124,6 +126,9 @@ std::shared_ptr<CmdOutput> Cmd::run(std::filesystem::path dir) {
   auto err = inst.tmp("stderr");
   int status;
 
+  std::string rel =
+      std::filesystem::relative(dir, std::filesystem::current_path()).string();
+
   pid_t pid = fork();
 
   if (pid == -1) {
@@ -132,8 +137,20 @@ std::shared_ptr<CmdOutput> Cmd::run(std::filesystem::path dir) {
   }
 
   if (pid == 0) {
+    std::vector<const char *> env;
+    char **it = environ;
+    while (*it) {
+      env.push_back(*it++);
+    }
+    std::string s = std::format("GIT_EACH_DIR={}", rel);
+    env.push_back(s.c_str());
+    env.push_back(NULL);
+
     out->dup(1);
     err->dup(2);
+
+    char *const *out_env = const_cast<char **>(env.data());
+
     int res = chdir(dir.c_str());
     if (res == -1) {
       throw std::system_error(errno, std::system_category(),
@@ -142,7 +159,7 @@ std::shared_ptr<CmdOutput> Cmd::run(std::filesystem::path dir) {
     }
 
     Args args(this->args);
-    res = execv(this->resolved.c_str(), args.offsets);
+    res = execve(this->resolved.c_str(), args.offsets, out_env);
 
     if (res == -1) {
       throw std::system_error(errno, std::system_category(),
